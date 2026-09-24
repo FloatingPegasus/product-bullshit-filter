@@ -1,0 +1,97 @@
+{
+  "url": "https://www.amazon.in/dp/B0NOVA80",
+  "hostname": "www.amazon.in",
+  "marketplace": "Amazon",
+  "title": "Nova Buds X9 Wireless Earbuds",
+  "brand": "Nova",
+  "breadcrumbs": ["Electronics", "Headphones", "Earbuds"],
+  "price": { "raw": "₹1,999", "compareAtRaw": "₹7,999" },
+  "availability": "In stock",
+  "badges": ["Amazon's Choice"],
+  "rating": { "average": 4.1, "count": 12431 },
+  "histogram": [
+    { "stars": 5, "percent": 78 },
+    { "stars": 4, "percent": 6 },
+    { "stars": 3, "percent": 3 },
+    { "stars": 2, "percent": 2 },
+    { "stars": 1, "percent": 11 }
+  ],
+  "bullets": [
+    "Revolutionary military-grade earbuds with unparalleled premium sound",
+    "Up to 80 hours of battery life for endless music",
+    "Crystal clear calls even in the busiest environments",
+    "Ergonomic design that fits perfectly every time",
+    "The ultimate gift for music lovers",
+    "Bluetooth 5.3 with 11 mm drivers",
+    "IP55 water and sweat resistance",
+    "Instant pairing and universal compatibility"
+  ],
+  "description": "Experience the future of sound. These revolutionary earbuds transform every commute.",
+  "specs": [
+    { "name": "Driver", "value": "11 mm dynamic", "source": "spec table" },
+    { "name": "Bluetooth", "value": "5.3", "source": "spec table" },
+    { "name": "Water resistance", "value": "IP55", "source": "spec table" },
+    { "name": "Battery", "value": "Up to 8 hours (earbuds) / up to 80 hours (with case)", "source": "spec table" },
+    { "name": "Weight", "value": "52 g with case", "source": "spec table" },
+    { "name": "Warranty", "value": "6 months limited warranty from seller. No international warranty.", "source": "spec table" }
+  ],
+  "seller": {
+    "name": "NovaGadget Hub",
+    "fulfilledBy": "NovaGadget Hub",
+    "rating": "3.6 out of 5",
+    "raw": "Ships from NovaGadget Hub Sold by NovaGadget Hub"
+  },
+  "warranty": "6 months limited warranty from seller. No international warranty.",
+  "returns": "7-day replacement only. Opened boxes are not eligible for refund.",
+  "reviews": [
+    {
+      "stars": 5,
+      "title": "Loved it",
+      "body": "Amazing sound quality and battery life. Totally worth it. Fast delivery. Highly recommend this product to everyone.",
+      "date": "Reviewed in India on 2 March 2026",
+      "verified": true,
+      "author": "Asha",
+      "incentivized": false
+    },
+    {
+      "stars": 5,
+      "title": "Loved it",
+      "body": "Amazing sound quality and battery life. Totally worth it. Fast delivery. Highly recommend this product to everyone.",
+      "date": "Reviewed in India on 2 March 2026",
+      "verified": true,
+      "author": "Rohit",
+      "incentivized": false
+    },
+    {
+      "stars": 5,
+      "title": "Loved it",
+      "body": "Amazing sound quality and battery life. Totally worth it. Fast delivery. Highly recommend this product to everyone.",
+      "date": "Reviewed in India on 2 March 2026",
+      "verified": true,
+      "author": "Meera",
+      "incentivized": false
+    },
+    {
+      "stars": 5,
+      "title": "Vine review",
+      "body": "I received this product for free in exchange for my honest review. Amazing sound quality and battery life. Totally worth it.",
+      "date": "Reviewed in India on 2 March 2026",
+      "verified": false,
+      "author": "VineUser",
+      "incentivized": true
+    },
+    {
+      "stars": 1,
+      "title": "Left bud died",
+      "body": "Left bud died after 11 days. The case still shows a full charge. Support told me to contact the seller. The seller never replied.",
+      "date": "Reviewed in India on 11 January 2026",
+      "verified": true,
+      "author": "Kabir",
+      "incentivized": false
+    }
+  ],
+  "variant": "Black",
+  "urgency": "Only 3 left in stock",
+  "subscription": false,
+  "limits": []
+}

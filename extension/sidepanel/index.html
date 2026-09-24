@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Product Bullshit Filter</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <p class="kicker">Product Bullshit Filter</p>
+          <p class="page-now" id="page-now">No tab yet</p>
+        </div>
+      </div>
+      <button id="open-options" class="text-btn" type="button">Model</button>
+    </header>
+
+    <form id="url-form" class="url-form">
+      <label class="sr" for="url">Marketplace URL</label>
+      <input id="url" name="url" type="url" inputmode="url" placeholder="Paste a marketplace URL" autocomplete="off" spellcheck="false" />
+      <button type="submit">Open</button>
+    </form>
+
+    <div class="actions">
+      <button id="filter-tab" class="primary" type="button">Filter this page</button>
+      <button id="sample-shady" class="ghost" type="button">Shady sample</button>
+      <button id="sample-clean" class="ghost" type="button">Clean sample</button>
+    </div>
+    <p id="model-state" class="model-state">Local rules. Model off.</p>
+    <p id="status" class="status" role="status"></p>
+    <div id="intro" class="intro">
+      <p>Paste a listing URL, or filter the tab you already have open. The filter reads the page in this browser, pulls measurable specs out of the copy, and checks the seller terms and the reviews that are actually loaded.</p>
+    </div>
+    <div id="report" class="report" hidden></div>
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>

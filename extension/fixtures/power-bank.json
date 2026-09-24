@@ -1,0 +1,88 @@
+{
+  "url": "https://www.amazon.in/dp/B0PACK65",
+  "hostname": "www.amazon.in",
+  "marketplace": "Amazon",
+  "title": "20000 mAh 65 W USB-C power bank",
+  "brand": "Fieldcell",
+  "breadcrumbs": ["Electronics", "Power banks"],
+  "price": { "raw": "₹2,499", "compareAtRaw": "" },
+  "availability": "In stock",
+  "badges": [],
+  "rating": { "average": 4.4, "count": 840 },
+  "histogram": [
+    { "stars": 5, "percent": 62 },
+    { "stars": 4, "percent": 20 },
+    { "stars": 3, "percent": 8 },
+    { "stars": 2, "percent": 4 },
+    { "stars": 1, "percent": 6 }
+  ],
+  "bullets": [
+    "20000 mAh cell capacity, 74 Wh, under the airline limit printed on the label",
+    "65 W continuous USB-C PD output, enough for a laptop",
+    "Two USB-C ports and one USB-A port",
+    "Weight 480 g",
+    "Charges itself in about 90 min from a 65 W USB-C wall adapter"
+  ],
+  "description": "Capacity is 20000 mAh and 74 Wh. Output is 65 W continuous on USB-C PD. Weight is 480 g.",
+  "specs": [
+    { "name": "Capacity", "value": "20000 mAh (74 Wh)", "source": "spec table" },
+    { "name": "Output", "value": "65 W USB-C PD", "source": "spec table" },
+    { "name": "Ports", "value": "2x USB-C, 1x USB-A", "source": "spec table" },
+    { "name": "Weight", "value": "480 g", "source": "spec table" },
+    { "name": "Warranty", "value": "18 months", "source": "spec table" }
+  ],
+  "seller": { "name": "Amazon", "fulfilledBy": "Amazon", "rating": "", "raw": "Ships from Amazon Sold by Amazon" },
+  "warranty": "18 months",
+  "returns": "30-day free returns",
+  "reviews": [
+    {
+      "stars": 5,
+      "title": "Holds the stated capacity",
+      "body": "I metered a full drain at about 68 Wh into a laptop over USB-C. The 65 W claim held until the bank hit roughly 20 percent.",
+      "date": "Reviewed in India on 4 January 2026",
+      "verified": true,
+      "author": "Neel",
+      "incentivized": false
+    },
+    {
+      "stars": 4,
+      "title": "Heavy, but the wattage is real",
+      "body": "480 g is noticeable in a bag. It did charge a 14 inch laptop at 65 W. The USB-A port is only for a phone.",
+      "date": "Reviewed in India on 18 February 2026",
+      "verified": true,
+      "author": "Lata",
+      "incentivized": false
+    },
+    {
+      "stars": 5,
+      "title": "PD handshake worked",
+      "body": "My work laptop negotiated 65 W on the first USB-C port. The second port dropped to a lower wattage while both were in use, which the spec table implies.",
+      "date": "Reviewed in India on 3 April 2026",
+      "verified": true,
+      "author": "Imran",
+      "incentivized": false
+    },
+    {
+      "stars": 3,
+      "title": "Fanless and warm",
+      "body": "After 40 minutes at 65 W the case was warm but not alarming. Capacity feels close to 20000 mAh. I wish the display showed watt-hours remaining.",
+      "date": "Reviewed in India on 22 June 2026",
+      "verified": true,
+      "author": "Sana",
+      "incentivized": false
+    },
+    {
+      "stars": 2,
+      "title": "USB-A is slow",
+      "body": "The USB-C side is fine. A phone on the USB-A port crawled. Not a defect, just a weak port next to an otherwise specific 65 W listing.",
+      "date": "Reviewed in India on 9 August 2026",
+      "verified": true,
+      "author": "Dev",
+      "incentivized": false
+    }
+  ],
+  "variant": "",
+  "urgency": "",
+  "subscription": false,
+  "limits": []
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Model · Product Bullshit Filter</title>
+    <link rel="stylesheet" href="../sidepanel/panel.css" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <p class="kicker">Product Bullshit Filter</p>
+          <p class="page-now">Model settings</p>
+        </div>
+      </div>
+    </header>
+    <form id="settings" class="settings">
+      <p class="intro-copy">The score is always computed in this browser. A model can rewrite the narrative, and every line it adds has to be found on the page. Page text is sent only when you run a model pass.</p>
+      <label class="check"><input id="llm-enabled" type="checkbox" /> Use a model</label>
+      <label class="check"><input id="auto-refine" type="checkbox" /> Run the model automatically after each filter</label>
+      <label class="field">
+        <span>Provider</span>
+        <select id="provider">
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="compatible">OpenAI-compatible (Ollama, Groq, OpenRouter)</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Base URL</span>
+        <input id="base-url" type="url" spellcheck="false" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>Model</span>
+        <input id="model" type="text" spellcheck="false" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>API key</span>
+        <input id="api-key" type="password" spellcheck="false" autocomplete="off" />
+      </label>
+      <div class="actions">
+        <button class="primary" type="submit">Save</button>
+        <button id="test" class="ghost" type="button">Test connection</button>
+      </div>
+      <p id="status" class="status" role="status"></p>
+    </form>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

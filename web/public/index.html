@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Product Bullshit Filter</title>
+    <link rel="stylesheet" href="/sidepanel/panel.css" />
+    <link rel="stylesheet" href="/site.css" />
+  </head>
+  <body>
+    <div class="site">
+      <header class="top site-top">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <p class="kicker">Product Bullshit Filter</p>
+            <p class="page-now">Listing in, measurable facts out</p>
+          </div>
+        </div>
+        <a class="text-btn" href="#extension">Extension</a>
+      </header>
+
+      <p class="lede">Paste a marketplace URL. The site fetches the page and runs the same rules as the extension: specs against slogans, seller and warranty, and the reviews that are actually in the HTML.</p>
+
+      <form id="url-form" class="url-form site-url">
+        <label class="sr" for="url">Marketplace URL</label>
+        <input id="url" name="url" type="url" inputmode="url" placeholder="Paste a marketplace URL" autocomplete="off" spellcheck="false" required />
+        <button type="submit">Filter</button>
+      </form>
+
+      <div class="actions">
+        <button id="sample-shady" class="ghost" type="button">Shady sample</button>
+        <button id="sample-clean" class="ghost" type="button">Clean sample</button>
+      </div>
+      <p id="status" class="status" role="status"></p>
+      <div id="report" class="report" hidden></div>
+
+      <section id="extension" class="block site-note">
+        <h3>When a store blocks this site</h3>
+        <p class="note">Amazon and Flipkart often refuse a server. The Chrome extension reads the tab you already have open, including the text a bot never receives. Load the <code>extension</code> folder from this repo with Developer mode on.</p>
+      </section>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
