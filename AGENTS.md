@@ -8,8 +8,9 @@ Product Research: a plain-JavaScript, link-first purchase research website. User
 - `web/fetch-page.js`: public URL validation, socket-time DNS validation, redirect/body limits.
 - `web/analyze.js`: inert HTML parsing and shared analysis.
 - `web/research/`: research orchestration, evidence grounding and server-only provider adapters.
-- `extension/content/` and `extension/lib/`: reused legacy scraper/rules; extension UI is superseded and not served by the website.
+- `web/listing/`: inert product scraper, deterministic listing rules and string helpers.
 - `web/public/`: website. `test/`: fixtures and Node regression/integration tests.
+- `deploy/`: private-server Compose configuration and restricted release receiver. `.github/workflows/deploy.yml`: CI and deployment.
 
 ## Commands
 
@@ -19,7 +20,7 @@ Use Node 22.18+ or current LTS.
 npm ci
 npm start                  # http://127.0.0.1:8787
 npm test                   # includes a disposable loopback HTTP server
-npm run preview            # static renderer/demo at :8765
+npm run check              # JavaScript, shell and Python syntax
 ```
 
 Exercise the website research flow in a browser. Keep provider tests and samples synthetic; live research transmits the brief and public page evidence to configured providers. Do not require or promote installing a browser extension.

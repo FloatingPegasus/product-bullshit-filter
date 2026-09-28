@@ -1,8 +1,4 @@
-/**
- * Injected into the tab as a classic script (no eval — extension CSP forbids it).
- * Node tests load the same file through require().
- */
-function scrapeDocument(doc, loc) {
+export function scrapeDocument(doc, loc) {
   const hostname = String(loc?.hostname || "");
   const marketplace = marketplaceFromHost(hostname);
   const out = blankListing(loc, marketplace);
@@ -723,9 +719,3 @@ function marketplaceFromHost(hostname) {
 }
 
 const JUNK = /^(see more|read more|about this item|sponsored|make sure this fits(?: by entering your model number)?|customer reviews|back to top)$/i;
-
-globalThis.__PBF_scrapeDocument = scrapeDocument;
-
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { scrapeDocument };
-}

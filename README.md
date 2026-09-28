@@ -47,14 +47,15 @@ The report leads with listing flags, then supported fit/findings and alternative
 ## Development
 
 ```sh
+npm run check
 npm test
 ```
 
-Tests use fixtures and mocked providers, including disposable loopback servers. No paid calls run as routine tests. Synthetic reports live in `support/research-fixture.js`; the website exposes no demo endpoints.
+Local checks require Node 22.18+, Bash and Python 3. Tests use fixtures and mocked providers, including disposable loopback servers. No paid calls run as routine tests. Synthetic reports live in `support/research-fixture.js`, with data under `test/fixtures/`; the website exposes no demo endpoints.
 
 `POST /api/research` accepts JSON `{url, needs, market, budget, productHint}` and streams NDJSON `progress`, `result`, or `error` events. Markets are `IN`, `US`, `GB`; budget is a positive number or `null`. `GET /api/config` returns configuration flags, not a live connection check.
 
-`web/research/` contains orchestration and server-only adapters. `web/public/` contains the interface. Legacy rule/scraper modules under `extension/` are reused internally; its UI is not served. Fetching validates public addresses at socket connection and each redirect, preserves TLS checks, bounds content/time, and parses HTML without scripts or subresources.
+`web/research/` contains orchestration and server-only adapters. `web/listing/` contains the scraper and deterministic analysis. `web/public/` contains the interface. Fetching validates public addresses at socket connection and each redirect, preserves TLS checks, bounds content/time, and parses HTML without scripts or subresources.
 
 See [AGENTS.md](AGENTS.md) and [AUDIT.md](AUDIT.md) for maintenance rules and verification history.
 
@@ -62,7 +63,7 @@ See [AGENTS.md](AGENTS.md) and [AUDIT.md](AUDIT.md) for maintenance rules and ve
 
 The app runs on the existing ARM64 VM in its own `product-research` Compose project. Runtime configuration is private at `/opt/product-research/shared/.env`; never overwrite it from a local example. The installed gateway currently exposes `quality`, so production explicitly uses that alias with a dedicated restricted key. Switching to `standard` requires the gateway and key grant to support it first.
 
-The [Test and deploy workflow](https://github.com/FloatingPegasus/product-bullshit-filter/actions/workflows/deploy.yml) runs tests and builds an ARM64 image for pull requests. A push to `main`, or a manual workflow run on `main`, also deploys that tested commit. Changes limited to README, audit notes or agent instructions skip the workflow. Standard GitHub runners are free for this public repository. The workflow transfers the image directly to the existing server; it does not use a paid registry, retained Actions artifacts, or another VM.
+The [CI and deployment workflow](https://github.com/FloatingPegasus/product-bullshit-filter/actions/workflows/deploy.yml) checks JavaScript, shell and Python syntax, audits production dependencies for high-severity vulnerabilities, and runs the regression suite. Only passing checks allow the ARM64 production image to build. A disposable container with external networking disabled must then serve the website and assets, report providers as unconfigured, and reject a private research URL. Pull requests stop after validation. A push to `main`, or a manual workflow run on `main`, deploys that same tested image. Changes limited to README, audit notes or agent instructions skip the workflow. Standard GitHub runners are free for this public repository. The workflow transfers the image directly to the existing server; it does not use a paid registry, retained Actions artifacts, or another VM.
 
 GitHub stores a dedicated `PRODUCT_DEPLOY_KEY`, pinned `PRODUCT_KNOWN_HOSTS`, and a `PRODUCT_DEPLOY_HOST` repository variable. The key's server entry uses `restrict,command="/opt/product-research/deploy/receive.sh"`; it cannot open a shell, forward ports, or run arbitrary SSH commands. The personal SSH key and app/provider credentials are not copied into GitHub. Workflow actions are pinned to commit IDs; pull requests receive no deployment secrets.
 

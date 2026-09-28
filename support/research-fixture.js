@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { buildReport } from '../extension/lib/report.js';
+import { buildReport } from '../web/listing/report.js';
 import { listingTrust } from '../web/research/research.js';
 
 export async function sampleResearch(name) {
   if (!['earbuds', 'power-bank'].includes(name)) throw new Error('Unknown fixture');
-  const scrape = JSON.parse(await readFile(new URL(`../extension/fixtures/${name}.json`, import.meta.url), 'utf8'));
+  const scrape = JSON.parse(await readFile(new URL(`../test/fixtures/${name}.json`, import.meta.url), 'utf8'));
   const report = buildReport(scrape);
   return {
     version: 1, mode: 'demo', checkedAt: new Date().toISOString(),

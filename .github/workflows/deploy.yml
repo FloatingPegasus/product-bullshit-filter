@@ -1,4 +1,4 @@
-name: Test and deploy
+name: CI and deployment
 
 on:
   pull_request:
@@ -17,9 +17,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
+  checks:
+    name: Syntax and regression tests
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 20
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -29,7 +30,18 @@ jobs:
           node-version: '22'
           package-manager-cache: false
       - run: npm ci
+      - run: npm run check
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm test
+  release:
+    name: Build, smoke test and deploy
+    needs: checks
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
       - name: Build the ARM64 image
         env:
           RELEASE_ID: git-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -37,6 +49,10 @@ jobs:
           docker build --platform linux/arm64 \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             --tag "product-research:$RELEASE_ID" .
+      - name: Smoke test the production image without network access
+        env:
+          RELEASE_ID: git-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        run: bash scripts/smoke-container.sh "product-research:$RELEASE_ID"
       - name: Deploy and verify production
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:

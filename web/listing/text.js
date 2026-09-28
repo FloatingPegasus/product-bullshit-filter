@@ -1,5 +1,3 @@
-/** Shared string helpers. Used by the local filter and the model-output sanitizer. */
-
 export function norm(value) {
   return String(value ?? "")
     .replace(/[\u200e\u200f\u202a-\u202e\ufeff\u00a0]/g, " ")
@@ -33,25 +31,6 @@ export function jaccard(left, right) {
   for (const token of a) if (b.has(token)) intersection += 1;
   const union = a.size + b.size - intersection;
   return union === 0 ? 0 : intersection / union;
-}
-
-export function parseStars(value) {
-  if (value == null || value === "") return null;
-  const text = String(value);
-  const labeled = text.match(/(\d(?:\.\d)?)\s*(?:out of\s*5)?\s*stars?/i);
-  if (labeled) {
-    const stars = Number(labeled[1]);
-    if (stars >= 0 && stars <= 5) return stars;
-  }
-  const bare = Number(text);
-  if (Number.isFinite(bare) && bare >= 0 && bare <= 5) return bare;
-  return null;
-}
-
-export function parseCount(value) {
-  if (value == null || value === "") return null;
-  const match = String(value).replace(/,/g, "").match(/(\d+)/);
-  return match ? Number(match[1]) : null;
 }
 
 const MONTHS = {
@@ -107,43 +86,6 @@ function utc(year, month, day) {
 
 export function numbersIn(value) {
   return [...String(value ?? "").matchAll(/\d+(?:\.\d+)?/g)].map((match) => match[0]);
-}
-
-export function compact(value) {
-  return lower(value).replace(/[^a-z0-9.]+/g, "");
-}
-
-export function corpusContains(corpus, snippet) {
-  const needle = lower(snippet).replace(/[^a-z0-9.%]+/g, " ").replace(/\s+/g, " ").trim();
-  if (needle.length < 8) return false;
-  const hay = lower(corpus).replace(/[^a-z0-9.%]+/g, " ").replace(/\s+/g, " ");
-  return hay.includes(needle);
-}
-
-export function buildCorpus(scrape) {
-  const reviews = (scrape.reviews || []).map((review) =>
-    [review.title, review.body, review.date, review.author].filter(Boolean).join(" "),
-  );
-  const specs = (scrape.specs || []).map((spec) => `${spec.name}: ${spec.value}`);
-  return [
-    scrape.title,
-    scrape.brand,
-    scrape.price?.raw,
-    scrape.price?.compareAtRaw,
-    scrape.availability,
-    scrape.warranty,
-    scrape.returns,
-    scrape.seller?.name,
-    scrape.seller?.fulfilledBy,
-    scrape.seller?.raw,
-    scrape.description,
-    ...(scrape.bullets || []),
-    ...specs,
-    ...reviews,
-    ...(scrape.badges || []),
-  ]
-    .filter(Boolean)
-    .join("\n");
 }
 
 export function money(value) {

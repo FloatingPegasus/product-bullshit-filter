@@ -2,7 +2,7 @@ import { fetchListing, publicUrl } from '../fetch-page.js';
 import { inspectHtml } from '../analyze.js';
 import { providerConfig, providerStatus, searchWeb, reasonAboutProducts, discoverCandidates } from './providers.js';
 import { setTimeout as delay } from 'node:timers/promises';
-import { numbersIn } from '../../extension/lib/text.js';
+import { numbersIn } from '../listing/text.js';
 
 const MARKETS = { IN: { name: 'India', currency: 'INR', stores: ['amazon.in', 'flipkart.com', 'croma.com'] }, US: { name: 'United States', currency: 'USD', stores: ['amazon.com', 'walmart.com', 'bestbuy.com'] }, GB: { name: 'United Kingdom', currency: 'GBP', stores: ['amazon.co.uk', 'currys.co.uk', 'johnlewis.com'] } };
 const RETAILERS = Object.values(MARKETS).flatMap(m => m.stores).concat(['reliancedigital.in', 'target.com', 'newegg.com']);

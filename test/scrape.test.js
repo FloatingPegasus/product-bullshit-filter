@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
-import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { Window } from "happy-dom";
-import { buildReport } from "../extension/lib/report.js";
+import { buildReport } from "../web/listing/report.js";
 
-const require = createRequire(import.meta.url);
-const { scrapeDocument } = require("../extension/content/scrape-page.cjs");
+import { scrapeDocument } from "../web/listing/scrape-page.js";
 
 function load(file, url) {
   const html = readFileSync(new URL(file, import.meta.url), "utf8");
@@ -85,7 +83,7 @@ test("current amazon review, histogram, and seller hooks", () => {
 });
 
 test("a generic listing page is enough when the marketplace is unfamiliar", () => {
-  const scrape = load("../demo/listing.html", "https://north.market/p/nova-buds-x9");
+  const scrape = load("./fixtures/generic-page.html", "https://north.market/p/nova-buds-x9");
   assert.equal(scrape.marketplace, "North");
   assert.match(scrape.title, /Nova Buds X9/);
   assert.equal(scrape.price.raw, "₹1,999");

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { classifyFragment, extractMeasurements } from "../extension/lib/marketing.js";
+import { classifyFragment, extractMeasurements } from "../web/listing/marketing.js";
 
 test("military-grade copy is marketing and a driver size is a spec", () => {
   const slogan = classifyFragment("Revolutionary military-grade earbuds with unparalleled premium sound");

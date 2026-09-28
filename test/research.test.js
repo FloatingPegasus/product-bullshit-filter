@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { validateBrief, listingTrust, groundAnalysis, researchProduct, researchQueries, groundedCandidates } from '../web/research/research.js';
 import { searchWeb, reasonAboutProducts, providerStatus, providerConfig } from '../web/research/providers.js';
-import { buildReport } from '../extension/lib/report.js';
+import { buildReport } from '../web/listing/report.js';
 import { Window } from 'happy-dom';
 import { renderResearch } from '../web/public/research-render.js';
 const config = { searchKey: 'secret-search-key', modelReady: true, model: 'fixture-model', apiKey: 'secret-model-key', baseUrl: 'https://provider.example/v1' };

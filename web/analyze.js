@@ -1,9 +1,6 @@
-import { createRequire } from "node:module";
 import { Window } from "happy-dom";
-import { buildReport } from "../extension/lib/report.js";
-
-const require = createRequire(import.meta.url);
-const { scrapeDocument } = require("../extension/content/scrape-page.cjs");
+import { buildReport } from "./listing/report.js";
+import { scrapeDocument } from "./listing/scrape-page.js";
 
 export function reportFromHtml(html, url) {
   return inspectHtml(html, url).report;

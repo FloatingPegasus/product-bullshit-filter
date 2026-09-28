@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { buildReport } from "../extension/lib/report.js";
-import { parseLooseDate } from "../extension/lib/text.js";
+import { buildReport } from "../web/listing/report.js";
+import { parseLooseDate } from "../web/listing/text.js";
 
-const shady = JSON.parse(readFileSync(new URL("../extension/fixtures/earbuds.json", import.meta.url), "utf8"));
-const clean = JSON.parse(readFileSync(new URL("../extension/fixtures/power-bank.json", import.meta.url), "utf8"));
+const shady = JSON.parse(readFileSync(new URL("./fixtures/earbuds.json", import.meta.url), "utf8"));
+const clean = JSON.parse(readFileSync(new URL("./fixtures/power-bank.json", import.meta.url), "utf8"));
 
 test("shady earbuds score as unverifiable and name the real tricks", () => {
   const report = buildReport(shady, { now: new Date("2026-09-25T00:00:00Z") });
