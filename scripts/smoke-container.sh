@@ -8,26 +8,40 @@ docker run --detach --name "$container" --network none --read-only \
   --env PUBLIC_ORIGIN=https://product-ci.invalid "$image" >/dev/null
 ready=0
 for attempt in {1..30}; do
-  if docker exec "$container" node -e 'fetch("http://127.0.0.1:8787/healthz", {headers:{host:"product-ci.invalid"}}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))'; then
+  if docker exec "$container" node -e 'require("node:http").get("http://127.0.0.1:8787/healthz", {headers:{host:"product-ci.invalid"},timeout:5000},r=>process.exit(r.statusCode===200?0:1)).on("timeout",function(){this.destroy();}).on("error",()=>process.exit(1))'; then
     ready=1
     break
   fi
   sleep 1
 done
-test "$ready" = 1
+if [[ $ready != 1 ]]; then
+  docker logs "$container" >&2
+  exit 1
+fi
 docker exec -i "$container" node --input-type=module <<'JS'
 import assert from 'node:assert/strict';
+import http from 'node:http';
 const base = 'http://127.0.0.1:8787';
 const headers = { host: 'product-ci.invalid' };
-const home = await fetch(base, { headers });
+const request = (path, { method = 'GET', headers: extraHeaders = {}, body } = {}) => new Promise((resolve, reject) => {
+  const req = http.request(`${base}${path}`, { method, headers: { ...headers, ...extraHeaders }, timeout: 5000 }, res => {
+    const chunks = [];
+    res.on('data', chunk => chunks.push(chunk));
+    res.on('end', () => resolve(new Response(Buffer.concat(chunks), { status: res.statusCode, headers: res.headers })));
+  });
+  req.on('error', reject);
+  req.on('timeout', () => req.destroy(new Error('Smoke request timed out')));
+  req.end(body);
+});
+const home = await request('/');
 assert.equal(home.status, 200);
 assert.match(await home.text(), /Product link/);
-const config = await (await fetch(`${base}/api/config`, { headers })).json();
+const config = await (await request('/api/config')).json();
 assert.deepEqual(config, { ok: true, searchConfigured: false, reasoningConfigured: false });
 for (const url of ['/research-render.js', '/app.js', '/site.css']) {
-  assert.equal((await fetch(`${base}${url}`, { headers })).status, 200);
+  assert.equal((await request(url)).status, 200);
 }
-const blocked = await fetch(`${base}/api/research`, {
+const blocked = await request('/api/research', {
   method: 'POST', headers: { ...headers, 'content-type': 'application/json', origin: 'https://product-ci.invalid' },
   body: JSON.stringify({ url: 'http://127.0.0.1/admin' }),
 });
