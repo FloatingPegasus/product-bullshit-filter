@@ -1,7 +1,7 @@
 import { collectMarks } from "../lib/marks.js";
 import { refineWithLlm } from "../lib/llm.js";
 import { buildReport } from "../lib/report.js";
-import { loadSettings } from "../lib/settings.js";
+import { loadSettings, hasModelCredentials } from "../lib/settings.js";
 import { renderReport } from "./render.js";
 
 const statusEl = document.querySelector("#status");
@@ -31,14 +31,19 @@ chrome.tabs.onUpdated.addListener((_id, info) => {
   if (info.url || info.status === "complete") refreshTabLabel();
 });
 
-refreshTabLabel();
-refreshModelState();
-restoreLast();
-consumePending();
+async function initialize() {
+  try {
+    await refreshTabLabel();
+    await refreshModelState();
+    await restoreLast();
+    await consumePending();
+  } catch (error) { setStatus(error?.message || "Could not restore the panel.", true); }
+}
+void initialize();
 
 async function refreshModelState() {
   const settings = await loadSettings();
-  const name = settings.llmEnabled && settings.apiKey ? settings.model || settings.provider : "";
+  const name = settings.llmEnabled && hasModelCredentials(settings) ? settings.model || settings.provider : "";
   modelState.textContent = name
     ? `Model on · ${name}. Page text is sent only when a model pass runs.`
     : "Local rules. Model off. Page text stays in this browser.";
@@ -56,7 +61,7 @@ async function refreshTabLabel() {
 
 async function restoreLast() {
   const stored = await chrome.storage.session.get("last");
-  if (!stored.last?.report) return;
+  if (busy || !stored.last?.report) return;
   live = stored.last.live || null;
   showReport(stored.last.report);
 }
@@ -71,6 +76,7 @@ async function consumePending() {
 }
 
 async function openAndFilter(raw) {
+  if (busy) return;
   let target;
   try {
     target = new URL(String(raw || "").trim());
@@ -89,15 +95,16 @@ async function openAndFilter(raw) {
   }
   const same = tab.url === target.href;
   if (!same) {
-    const loaded = waitForLoad(tab.id);
-    await chrome.tabs.update(tab.id, { url: target.href, active: true });
+    setBusy(true);
+    const load = waitForLoad(tab.id);
     setStatus("Opening the page…");
     try {
-      await loaded;
+      await chrome.tabs.update(tab.id, { url: target.href, active: true });
+      await load.promise;
     } catch (error) {
       setStatus(error.message || "The page did not finish loading.", true);
       return;
-    }
+    } finally { load.cancel(); setBusy(false); }
   }
   await filterTab(tab.id);
 }
@@ -118,8 +125,9 @@ async function filterTab(tabId) {
     setStatus("Open a product page. Browser screens and the Chrome Web Store can't be scraped.", true);
     return;
   }
-  busy = true;
   setBusy(true);
+  reportEl.hidden = true;
+  live = null;
   setStatus("Reading the page…");
   try {
     const scrape = await scrapeTab(tabId);
@@ -129,7 +137,7 @@ async function filterTab(tabId) {
     showReport(report);
     await remember(report, scrape);
     const settings = await loadSettings();
-    if (settings.llmEnabled && settings.autoRefine && settings.apiKey) {
+    if (settings.llmEnabled && settings.autoRefine && hasModelCredentials(settings)) {
       await runModel(scrape, report, settings);
     } else {
       setStatus(report.product.title ? "Local pass done." : "Local pass done. This page had very little product text.");
@@ -137,20 +145,26 @@ async function filterTab(tabId) {
   } catch (error) {
     setStatus(error?.message || "Could not read that page.", true);
   } finally {
-    busy = false;
     setBusy(false);
   }
 }
 
 async function showFixture(name) {
+  if (busy) return;
+  setBusy(true);
+  reportEl.hidden = true;
   setStatus("Loading the sample…");
-  const response = await fetch(chrome.runtime.getURL(`fixtures/${name}.json`));
-  const scrape = await response.json();
-  live = null;
-  const report = buildReport(scrape);
-  showReport(report);
-  await remember(report, scrape);
-  setStatus(name === "earbuds" ? "Sample listing. Nothing was scraped." : "Clean sample. Nothing was scraped.");
+  try {
+    const response = await fetch(chrome.runtime.getURL(`fixtures/${name}.json`));
+    if (!response.ok) throw new Error("Could not load the sample.");
+    const scrape = await response.json();
+    live = null;
+    const report = buildReport(scrape);
+    showReport(report);
+    await remember(report, scrape);
+    setStatus("Sample listing. Nothing was scraped.");
+  } catch (error) { setStatus(error?.message || "Could not load the sample.", true); }
+  finally { setBusy(false); }
 }
 
 function showReport(report) {
@@ -161,11 +175,13 @@ function showReport(report) {
     onClear: live ? () => clearPage() : null,
     onRefine: () => refineCurrent(report),
   });
+  setBusy(busy);
 }
 
 async function refineCurrent(report) {
+  if (busy) return;
   const settings = await loadSettings();
-  if (!settings.llmEnabled || !settings.apiKey) {
+  if (!settings.llmEnabled || !hasModelCredentials(settings)) {
     setStatus("Turn the model on and add a key under Model.", true);
     return;
   }
@@ -234,7 +250,8 @@ async function clearPage() {
 }
 
 function waitForLoad(tabId) {
-  return new Promise((resolve, reject) => {
+  let cancel = () => {};
+  const promise = new Promise((resolve, reject) => {
     let settled = false;
     const finish = (fn, value) => {
       if (settled) return;
@@ -243,6 +260,7 @@ function waitForLoad(tabId) {
       chrome.tabs.onUpdated.removeListener(onUpdated);
       fn(value);
     };
+    cancel = () => finish(resolve);
     const timer = setTimeout(() => {
       finish(reject, new Error("The page took too long. Filter again once it settles."));
     }, 25000);
@@ -251,6 +269,9 @@ function waitForLoad(tabId) {
     };
     chrome.tabs.onUpdated.addListener(onUpdated);
   });
+  // Attach immediately so a failed navigation cannot leave an unhandled timeout.
+  void promise.catch(() => {});
+  return { promise, cancel };
 }
 
 async function activeTab() {
@@ -272,6 +293,8 @@ function setStatus(message, isError = false) {
 }
 
 function setBusy(value) {
+  busy = value;
+  urlInput.disabled = value;
   for (const button of document.querySelectorAll("button")) button.disabled = value;
 }
 

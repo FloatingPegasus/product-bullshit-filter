@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node web/server.js",
+    "start": "node --env-file-if-exists=.env web/server.js",
     "test": "node --test",
-    "preview": "python3 -m http.server 8765"
+    "preview": "python3 -m http.server 8765 --bind 127.0.0.1"
   },
   "dependencies": {
     "happy-dom": "^20.14.5"

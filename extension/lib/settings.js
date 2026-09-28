@@ -34,3 +34,22 @@ export async function saveSettings(settings) {
   await chrome.storage.local.set({ settings: next });
   return next;
 }
+
+export function modelEndpoint(settings) {
+  let url;
+  try { url = new URL(settings.baseUrl); }
+  catch { throw new Error("Enter a valid model base URL."); }
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  if (url.username || url.password || url.search || url.hash || (url.protocol !== 'https:' && !(local && url.protocol === 'http:'))) {
+    throw new Error("Use HTTPS for the model endpoint, or HTTP on localhost. Keep credentials out of the URL.");
+  }
+  return url.href.replace(/\/+$/, '');
+}
+
+export function hasModelCredentials(settings) {
+  if (typeof settings.apiKey === 'string' && settings.apiKey.trim()) return true;
+  try {
+    const url = new URL(modelEndpoint(settings));
+    return settings.provider === 'compatible' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  } catch { return false; }
+}

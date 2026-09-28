@@ -1,0 +1,11 @@
+*
+!package.json
+!package-lock.json
+!web/
+!web/**
+!extension/
+!extension/lib/
+!extension/lib/**
+!extension/content/
+!extension/content/scrape-page.cjs
+!Dockerfile

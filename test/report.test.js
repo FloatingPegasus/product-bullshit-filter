@@ -48,3 +48,12 @@ test("review dates in marketplace phrasing parse", () => {
   assert.equal(parseLooseDate("2026-03-02")?.toISOString(), "2026-03-02T00:00:00.000Z");
   assert.equal(parseLooseDate("not a date"), null);
 });
+
+test('feature names, standards and footnotes do not imply a different product', () => {
+  const plain = { title: 'Example Earbuds', bullets: ['Hearing Test', 'Bluetooth 5.3 connectivity', 'Works with Apple Watch chargers'], specs: [] };
+  const withFootnote = { ...plain, bullets: ['Hearing Test6', ...plain.bullets.slice(1)] };
+  const first = buildReport(plain);
+  const second = buildReport(withFootnote);
+  assert.equal(second.gotchas.some(row => row.code === 'foreign_product'), false);
+  assert.deepEqual(second.verdict.breakdown, first.verdict.breakdown);
+});

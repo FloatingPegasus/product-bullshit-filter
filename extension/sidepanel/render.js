@@ -11,16 +11,19 @@ function sheet(report, handlers) {
     productLine(report),
     meters(report.verdict.breakdown || []),
     differentiators(report.differentiators || []),
-    split(report),
-    sellerBlock(report.seller),
-    reviewBlock(report.reviews),
     gotchas(report.gotchas || []),
-    betterment(report.betterment || []),
-    questions(report.questions || []),
-    limits(report.limits || [], report),
+    disclosure("Specs and marketing", [split(report)]),
+    disclosure("Seller, warranty and returns", [sellerBlock(report.seller)]),
+    disclosure("Review evidence", [reviewBlock(report.reviews)]),
+    disclosure("Questions before buying", [betterment(report.betterment || []), questions(report.questions || [])]),
+    disclosure("Method and limitations", [limits(report.limits || [], report)]),
     actions(report, handlers),
   ];
   return el("article", { class: "sheet" }, nodes);
+}
+
+function disclosure(title, children) {
+  return el("details", {class: "report-detail"}, [el("summary", {}, title), ...children]);
 }
 
 function verdict(report, band) {
@@ -40,10 +43,10 @@ function verdict(report, band) {
 
 function stampLabel(band) {
   return {
-    substance: "Mostly real",
+    substance: "More measurable",
     mixed: "Mixed",
     marketing: "Heavy copy",
-    walkaway: "Walk away",
+    walkaway: "High uncertainty",
   }[band] || "Report";
 }
 
@@ -52,7 +55,7 @@ function productLine(report) {
   const bits = [product.marketplace, report.category && report.category !== "general" ? report.category : "", product.price, product.variant]
     .filter(Boolean)
     .join(" · ");
-  const children = [el("span", {}, bits || product.title || "")];
+  const children = [el("strong", {class: "product-title"}, product.title || "Listing"), el("span", {}, bits)];
   if (product.url && /^https?:/i.test(product.url)) {
     children.push(document.createTextNode(" · "));
     children.push(el("a", { href: product.url, target: "_blank", rel: "noreferrer" }, shortUrl(product.url)));
@@ -82,11 +85,7 @@ function meters(rows) {
 }
 
 function differentiators(items) {
-  const note = items.length
-    ? items.length < 5
-      ? `Stopped at ${items.length}. Anything past this is tone.`
-      : "Five facts you can line up against another listing."
-    : "";
+  const note = "Stated by the listing; not independently verified.";
   const body = items.length
     ? [
         el(
@@ -98,13 +97,14 @@ function differentiators(items) {
               el("div", {}, [
                 el("strong", { class: "diff-title" }, item.title),
                 el("p", { class: "detail" }, item.detail),
+                item.evidence ? el("p", {class: "quote"}, item.evidence) : null,
               ]),
             ]),
           ),
         ),
       ]
     : [el("p", { class: "empty" }, "Nothing on this page is specific enough to compare.")];
-  return block("What actually differs", note, body);
+  return block("Comparable facts", note, body);
 }
 
 function split(report) {
@@ -218,7 +218,7 @@ function betterment(items) {
         ),
       ]
     : [el("p", { class: "empty" }, "The listing already states the facts this category needs.")];
-  return block("Betterment", "What would make the next listing, or this purchase, cleaner.", body);
+  return block("What to verify", "", body);
 }
 
 function questions(items) {
@@ -241,7 +241,7 @@ function limits(items, report) {
 
 function actions(report, handlers) {
   const buttons = [
-    el("button", { type: "button", onclick: () => copyReport(report) }, "Copy report"),
+    el("button", { type: "button", onclick: (event) => copyReport(report, event.currentTarget) }, "Copy report"),
   ];
   if (handlers.onMark) buttons.push(el("button", { type: "button", onclick: handlers.onMark }, "Mark page"));
   if (handlers.onClear) buttons.push(el("button", { type: "button", onclick: handlers.onClear }, "Clear marks"));
@@ -268,9 +268,12 @@ function block(title, note, children) {
   ]);
 }
 
-function copyReport(report) {
-  const text = reportToPlainText(report);
-  navigator.clipboard?.writeText(text).catch(() => {});
+async function copyReport(report, button) {
+  try {
+    if (!navigator.clipboard) throw new Error("Clipboard unavailable");
+    await navigator.clipboard.writeText(reportToPlainText(report));
+    button.textContent = "Copied";
+  } catch { button.textContent = "Copy unavailable — select report text"; }
 }
 
 function shortUrl(url) {

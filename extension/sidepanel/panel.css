@@ -1,20 +1,20 @@
 :root {
-  color-scheme: dark;
-  --bg: #12110e;
-  --bg-2: #1c1a15;
-  --bg-3: #262218;
-  --ink: #f3efe4;
-  --muted: #a39b8b;
-  --faint: #6f685c;
-  --line: #343026;
-  --spec: #b7d48a;
-  --spec-dim: #24301c;
-  --mkt: #e6b15a;
-  --mkt-dim: #3a2c14;
-  --risk: #ef6d5c;
-  --risk-dim: #3a1d18;
-  --info: #8eb4d4;
-  --info-dim: #1a2833;
+  color-scheme: light;
+  --bg: #fafbf9;
+  --bg-2: #f0f3ee;
+  --bg-3: #e5eae3;
+  --ink: #202d27;
+  --muted: #52635a;
+  --faint: #617267;
+  --line: #d5ddd6;
+  --spec: #326346;
+  --spec-dim: #e5f0e5;
+  --mkt: #805416;
+  --mkt-dim: #f6eedd;
+  --risk: #a43a32;
+  --risk-dim: #f8e8e5;
+  --info: #355f63;
+  --info-dim: #e5eff0;
   --sans: "Avenir Next", "Segoe UI", sans-serif;
   --serif: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
   --mono: "SF Mono", ui-monospace, "Cascadia Mono", Menlo, monospace;
@@ -142,13 +142,13 @@ button { cursor: pointer; }
 }
 
 .primary, .ghost, .report-actions button {
-  border-radius: 999px;
+  border-radius: 3px;
   padding: 8px 12px;
 }
 
 .primary {
   background: var(--ink);
-  color: #16140f;
+  color: white;
   font-weight: 700;
 }
 
@@ -214,8 +214,8 @@ button:focus-visible, input:focus-visible {
 
 .headline {
   margin: 0;
-  font-family: var(--serif);
-  font-weight: 560;
+  font-family: var(--sans);
+  font-weight: 600;
   font-size: 22px;
   line-height: 1.15;
   color: var(--ink);
@@ -235,7 +235,7 @@ button:focus-visible, input:focus-visible {
 }
 
 .score-num {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 42px;
   line-height: 0.9;
   font-weight: 560;
@@ -273,7 +273,7 @@ button:focus-visible, input:focus-visible {
   height: 4px;
   margin-top: 4px;
   background: var(--bg-3);
-  border-radius: 99px;
+  border-radius: 2px;
   overflow: hidden;
   flex: 1;
 }
@@ -327,7 +327,7 @@ button:focus-visible, input:focus-visible {
 .pill {
   display: inline-block;
   padding: 1px 6px;
-  border-radius: 99px;
+  border-radius: 2px;
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.08em;
@@ -380,3 +380,15 @@ button:focus-visible, input:focus-visible {
 }
 
 ::selection { background: #5c4318; color: var(--ink); }
+
+a:focus-visible, select:focus-visible { outline: 2px solid var(--mkt); outline-offset: 3px; }
+.product-title { display: block; font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+.sheet { overflow-wrap: anywhere; }
+.pill { align-self: start; }
+
+[hidden] { display: none !important; }
+
+.report-detail { border-top: 1px solid var(--line); padding-top: 12px; }
+.report-detail > summary { cursor: pointer; font-weight: 600; }
+.report-detail > .block { margin-top: 16px; }
+.report-detail > summary:focus-visible { outline: 2px solid var(--mkt); outline-offset: 3px; }

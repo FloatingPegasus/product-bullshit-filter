@@ -1,0 +1,11 @@
+product.kanishq.dev {
+    encode gzip
+    header Strict-Transport-Security "max-age=31536000"
+    request_body {
+        max_size 8KB
+    }
+    reverse_proxy product-research-api:8787 {
+        header_up X-Real-IP {remote_host}
+        flush_interval -1
+    }
+}

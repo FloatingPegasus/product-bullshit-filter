@@ -1,0 +1,62 @@
+name: Test and deploy
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore: [README.md, AUDIT.md, AGENTS.md]
+  push:
+    branches: [main]
+    paths-ignore: [README.md, AUDIT.md, AGENTS.md]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: product-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm test
+      - name: Build the ARM64 image
+        env:
+          RELEASE_ID: git-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          docker build --platform linux/arm64 \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --tag "product-research:$RELEASE_ID" .
+      - name: Deploy and verify production
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          RELEASE_ID: git-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          PRODUCT_DEPLOY_HOST: ${{ vars.PRODUCT_DEPLOY_HOST }}
+          PRODUCT_DEPLOY_KEY: ${{ secrets.PRODUCT_DEPLOY_KEY }}
+          PRODUCT_KNOWN_HOSTS: ${{ secrets.PRODUCT_KNOWN_HOSTS }}
+        run: |
+          [[ "$PRODUCT_DEPLOY_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          test -n "$PRODUCT_DEPLOY_KEY"
+          test -n "$PRODUCT_KNOWN_HOSTS"
+          ssh_dir="$RUNNER_TEMP/product-ssh"
+          install -d -m 700 "$ssh_dir"
+          trap 'rm -f "$ssh_dir/key" "$ssh_dir/known_hosts"' EXIT
+          umask 077
+          printf '%s\n' "$PRODUCT_DEPLOY_KEY" > "$ssh_dir/key"
+          printf '%s\n' "$PRODUCT_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          docker image save "product-research:$RELEASE_ID" | gzip -1 | \
+            ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes \
+              -o UserKnownHostsFile="$ssh_dir/known_hosts" \
+              -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
+              -i "$ssh_dir/key" "ubuntu@$PRODUCT_DEPLOY_HOST" "deploy $RELEASE_ID"
+          printf 'Deployed `%s` to https://product.kanishq.dev\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

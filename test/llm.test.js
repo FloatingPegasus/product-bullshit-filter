@@ -30,6 +30,7 @@ test("model prose is kept only when its evidence is on the page", () => {
     local,
     {
       summary: "The page claims military-grade sound and up to 80 hours.",
+      summaryEvidence: "Up to 80 hours of battery life",
       differentiators: [
         { title: "Ingress protection: IP55", detail: "Stated on the page.", evidence: "IP55 water and sweat resistance" },
         { title: "Invented codec: LDAC", detail: "Not real.", evidence: "supports LDAC and aptX HD" },
@@ -60,4 +61,22 @@ test("fenced model JSON parses from both provider envelopes", () => {
   assert.match(text, /ok/);
   const openai = parseModelText("openai", { choices: [{ message: { content: "{\"summary\":\"ok\"}" } }] });
   assert.match(openai, /ok/);
+});
+
+
+test("ungrounded qualitative summary and advice cannot silently replace local findings", () => {
+  const local = buildReport(scrape);
+  const merged = mergeModelReport(local, {summary:"This product is endorsed by every regulator.",betterment:[{title:"Buy immediately",detail:"Certified safe by regulators."}],questions:[{malformed:true}],gotchas:[]}, scrape);
+  assert.equal(merged.verdict.summary,local.verdict.summary);
+  assert.deepEqual(merged.betterment,local.betterment);
+  assert.deepEqual(merged.gotchas,local.gotchas);
+  assert.deepEqual(merged.questions,local.questions);
+});
+
+
+test('model endpoints reject insecure remote URLs and support local models without a key', () => {
+  assert.throws(()=>buildLlmRequest({provider:'compatible',apiKey:'secret',baseUrl:'http://remote.example/v1'},scrape),/HTTPS/);
+  const local=buildLlmRequest({provider:'compatible',apiKey:'',baseUrl:'http://localhost:11434/v1',model:'local'},scrape);
+  assert.equal(local.headers.authorization,undefined);
+  assert.equal(local.url,'http://localhost:11434/v1/chat/completions');
 });

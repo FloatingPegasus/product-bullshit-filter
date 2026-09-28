@@ -1,4 +1,4 @@
-import { PROVIDER_PRESETS, loadSettings, saveSettings } from "../lib/settings.js";
+import { PROVIDER_PRESETS, loadSettings, saveSettings, modelEndpoint, hasModelCredentials } from "../lib/settings.js";
 
 const form = document.querySelector("#settings");
 const enabled = document.querySelector("#llm-enabled");
@@ -21,19 +21,24 @@ loadSettings().then((settings) => {
 provider.addEventListener("change", () => {
   const preset = PROVIDER_PRESETS[provider.value];
   if (!preset) return;
+  apiKey.value = "";
   baseUrl.value = preset.baseUrl;
   model.value = preset.model;
 });
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  await saveSettings(current());
-  setStatus("Saved in this browser.");
+  try {
+    const settings = current();
+    modelEndpoint(settings);
+    await saveSettings(settings);
+    setStatus("Saved in this browser.");
+  } catch (error) { setStatus(error.message || "Could not save settings.", true); }
 });
 
 document.querySelector("#test").addEventListener("click", async () => {
   const settings = current();
-  if (!settings.apiKey) {
+  if (!hasModelCredentials(settings)) {
     setStatus("Add a key first.", true);
     return;
   }
@@ -58,8 +63,10 @@ function current() {
 }
 
 async function testConnection(settings) {
+  const base = modelEndpoint(settings);
   if (settings.provider === "anthropic") {
-    const response = await fetch(`${settings.baseUrl.replace(/\/+$/, "")}/v1/messages`, {
+    const response = await fetch(`${base}/v1/messages`, {
+      signal: AbortSignal.timeout(20000),
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -76,8 +83,9 @@ async function testConnection(settings) {
     if (!response.ok) throw new Error(await errorText(response));
     return "Anthropic accepted the key.";
   }
-  const response = await fetch(`${settings.baseUrl.replace(/\/+$/, "")}/models`, {
-    headers: { authorization: `Bearer ${settings.apiKey}` },
+  const response = await fetch(`${base}/models`, {
+    signal: AbortSignal.timeout(20000),
+    headers: settings.apiKey ? { authorization: `Bearer ${settings.apiKey}` } : {},
   });
   if (!response.ok) throw new Error(await errorText(response));
   return "The provider accepted the key.";

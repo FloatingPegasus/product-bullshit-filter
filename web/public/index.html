@@ -1,45 +1,31 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Product Bullshit Filter</title>
-    <link rel="stylesheet" href="/sidepanel/panel.css" />
-    <link rel="stylesheet" href="/site.css" />
-  </head>
-  <body>
-    <div class="site">
-      <header class="top site-top">
-        <div class="brand">
-          <span class="mark" aria-hidden="true"></span>
-          <div>
-            <p class="kicker">Product Bullshit Filter</p>
-            <p class="page-now">Listing in, measurable facts out</p>
-          </div>
-        </div>
-        <a class="text-btn" href="#extension">Extension</a>
-      </header>
-
-      <p class="lede">Paste a marketplace URL. The site fetches the page and runs the same rules as the extension: specs against slogans, seller and warranty, and the reviews that are actually in the HTML.</p>
-
-      <form id="url-form" class="url-form site-url">
-        <label class="sr" for="url">Marketplace URL</label>
-        <input id="url" name="url" type="url" inputmode="url" placeholder="Paste a marketplace URL" autocomplete="off" spellcheck="false" required />
-        <button type="submit">Filter</button>
-      </form>
-
-      <div class="actions">
-        <button id="sample-shady" class="ghost" type="button">Shady sample</button>
-        <button id="sample-clean" class="ghost" type="button">Clean sample</button>
-      </div>
-      <p id="status" class="status" role="status"></p>
-      <div id="report" class="report" hidden></div>
-
-      <section id="extension" class="block site-note">
-        <h3>When a store blocks this site</h3>
-        <p class="note">Amazon and Flipkart often refuse a server. The Chrome extension reads the tab you already have open, including the text a bot never receives. Load the <code>extension</code> folder from this repo with Developer mode on.</p>
-      </section>
-    </div>
-    <script type="module" src="/app.js"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Check a product's claims, specifications and purchase terms before buying." />
+  <title>Bullshit Filter</title>
+  <link rel="stylesheet" href="/site.css" />
+</head>
+<body>
+  <main class="site">
+    <header><h1>Bullshit Filter</h1><p>Check the product before you buy.</p></header>
+    <form id="url-form">
+      <label for="url">Product link</label>
+      <div class="url-row"><input id="url" name="url" type="url" inputmode="url" placeholder="https://…" autocomplete="off" spellcheck="false" maxlength="2000" required /><button class="primary" type="submit">Check product</button></div>
+      <label for="needs">What matters to you? <span>Optional</span></label>
+      <textarea id="needs" name="needs" rows="2" maxlength="2000" placeholder="e.g. Clear calls on a noisy commute, comfortable for long use"></textarea>
+      <details class="options"><summary>Budget, country & exact model</summary>
+        <div class="form-pair"><div><label for="market">Shopping in</label><select id="market" name="market"><option value="IN">India · INR</option><option value="US">United States · USD</option><option value="GB">United Kingdom · GBP</option></select></div><div><label for="budget">Maximum budget <span id="currency">INR</span></label><input id="budget" name="budget" type="number" min="1" max="100000000" step="any" placeholder="No limit set" /></div></div>
+        <label for="product-hint">Exact product / variant <span>Optional</span></label><input id="product-hint" maxlength="180" placeholder="Useful if the store blocks the link" />
+      </details>
+      <p id="connection" class="service-note" role="status">Checking available services…</p>
+    </form>
+    <div id="progress" hidden><p id="step" role="status" aria-live="polite"></p><button id="cancel" type="button">Cancel</button></div>
+    <p id="status" role="status" aria-live="polite" tabindex="-1"></p>
+    <section id="report" aria-label="Product report" hidden></section>
+    <footer><details><summary>About this check</summary><p>The score describes evidence in the listing, not product quality. AI comparisons cite page excerpts but can still misinterpret them.</p><p>When connected, search and AI receive your requirements and public page text. Nothing is saved after you close this page.</p></details></footer>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
 </html>

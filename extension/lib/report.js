@@ -29,7 +29,6 @@ export function buildReport(scrape, options = {}) {
   const conflicts = findConflicts(source);
   const gaps = expectationGaps(source, category, differentiators);
   const extras = extraSignals(source);
-  extras.foreign = Boolean(foreignProduct(source));
   extras.bluetoothConflict = Boolean(bluetoothVersions(source));
   const breakdown = scoreBreakdown({ classified, reviews, seller, battery, conflicts, gaps, specs, extras });
   const score = clamp(Math.round(breakdown.reduce((sum, row) => sum + row.points, 0)), 0, 100);
@@ -148,7 +147,6 @@ function scoreBreakdown({ classified, reviews, seller, battery, conflicts, gaps,
   if (conflicts.length) slippery += 6;
   if (extras.steepDiscount) slippery += 3;
   if (extras.subscription) slippery += 4;
-  if (extras.foreign) slippery += 8;
   if (extras.bluetoothConflict) slippery += 6;
   slippery += Math.min(6, gaps.length * 2);
 
@@ -303,8 +301,6 @@ function collectGotchas({ marketing, seller, reviews, battery, conflicts, extras
       detail: "A blend name without an amount per ingredient means you cannot compare the dose to anything else.",
     });
   }
-  const foreign = foreignProduct(source);
-  if (foreign) gotchas.push(foreign);
   const bluetooth = bluetoothVersions(source);
   if (bluetooth) gotchas.push(bluetooth);
 
@@ -386,27 +382,6 @@ function findConflicts(scrape) {
     });
   }
   return conflicts;
-}
-
-function foreignProduct(scrape) {
-  const title = `${scrape.title || ""} ${scrape.brand || ""}`.toLowerCase();
-  const found = [];
-  for (const bullet of scrape.bullets || []) {
-    for (const match of bullet.matchAll(/\b([A-Z][A-Za-z0-9.+]*\s+[A-Z][A-Za-z0-9.+]*)\b/g)) {
-      const phrase = match[1];
-      if (phrase.length < 5 || title.includes(phrase.toLowerCase())) continue;
-      if (!/[+\d]/.test(phrase)) continue;
-      found.push(phrase);
-    }
-  }
-  const unique = [...new Set(found)];
-  if (!unique.length) return null;
-  return {
-    code: "foreign_product",
-    severity: "high",
-    title: "The bullets name a different product",
-    detail: `The listing is “${scrape.title || "this product"}”, but the bullets talk about ${unique.slice(0, 2).join(" and ")}.`,
-  };
 }
 
 function bluetoothVersions(scrape) {

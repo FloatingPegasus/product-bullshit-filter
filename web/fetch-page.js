@@ -1,7 +1,10 @@
 /** Fetch a public listing page. Refuses private hosts so a pasted URL cannot probe this machine. */
 
 import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
+import { isIP, BlockList } from "node:net";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+import { Readable } from "node:stream";
 
 const MAX_BYTES = 2_000_000;
 const MAX_REDIRECTS = 5;
@@ -17,12 +20,14 @@ export class FetchError extends Error {
 }
 
 export async function fetchListing(rawUrl, options = {}) {
-  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const fetchImpl = options.fetchImpl || ((url, init) => fetchPublic(url, init, lookupImpl));
   const lookupImpl = options.lookupImpl || lookup;
   let current = await publicUrl(rawUrl, lookupImpl);
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    const response = await fetchImpl(current.href, {
+    let response;
+    try {
+      response = await fetchImpl(current.href, {
       redirect: "manual",
       headers: {
         "user-agent":
@@ -30,21 +35,37 @@ export async function fetchListing(rawUrl, options = {}) {
         accept: "text/html,application/xhtml+xml",
         "accept-language": "en-IN,en;q=0.9",
       },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+      signal: AbortSignal.any([AbortSignal.timeout(TIMEOUT_MS), ...(options.signal ? [options.signal] : [])]),
+      });
+    } catch (error) {
+      if (error instanceof FetchError) throw error;
+      throw new FetchError(error.name === "AbortError" ? "The listing took too long to respond." : "Could not connect to that listing.", 502);
+    }
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
+      await response.body?.cancel();
       if (!location) throw new FetchError("The page redirected without a destination.", 502);
       current = await publicUrl(new URL(location, current).href, lookupImpl);
       continue;
     }
     if (!response.ok) {
+      await response.body?.cancel();
       throw new FetchError(`The page returned ${response.status}.`, response.status === 404 ? 404 : 502);
     }
-    const html = await readLimited(response);
+    const contentType = response.headers.get("content-type") || "";
+    if (!/^(text\/html|application\/xhtml\+xml)(;|$)/i.test(contentType)) {
+      await response.body?.cancel();
+      throw new FetchError("That URL did not return an HTML product page.", 422);
+    }
+    let html;
+    try { html = await readLimited(response); }
+    catch (error) {
+      if (error instanceof FetchError) throw error;
+      throw new FetchError("The listing could not finish loading.", 502);
+    }
     if (looksBlocked(html, response.status)) {
       throw new FetchError(
-        "This marketplace blocked the server. Open the listing in Chrome and use the extension, which reads the page you already have open.",
+        "This store blocked access to its page. Research can still use other sources; add the product name and exact variant if they cannot be identified from the link.",
         422,
       );
     }
@@ -70,11 +91,15 @@ export async function publicUrl(rawUrl, lookupImpl = lookup) {
   if (!/^https?:$/.test(url.protocol)) {
     throw new FetchError("Use an http or https listing.");
   }
+  if (url.username || url.password) throw new FetchError("Use a listing URL without credentials.");
+  if (url.port && url.port !== "80" && url.port !== "443") throw new FetchError("Use a standard http or https listing port.");
   const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal")) {
     throw new FetchError("That host is not a public listing.");
   }
-  const addresses = isIP(host) ? [host] : (await lookupImpl(host, { all: true })).map((entry) => entry.address);
+  let addresses;
+  try { addresses = isIP(host) ? [host] : (await boundedLookup(host, lookupImpl)).map((entry) => entry.address); }
+  catch { throw new FetchError("That host did not resolve.", 502); }
   if (!addresses.length) throw new FetchError("That host did not resolve.", 502);
   if (addresses.some(isPrivateAddress)) {
     throw new FetchError("That host is not a public listing.");
@@ -82,19 +107,67 @@ export async function publicUrl(rawUrl, lookupImpl = lookup) {
   return url;
 }
 
-function isPrivateAddress(address) {
-  const ip = String(address || "").toLowerCase();
-  if (ip === "::1" || ip === "0:0:0:0:0:0:0:1") return true;
-  if (ip.startsWith("fc") || ip.startsWith("fd") || ip.startsWith("fe80:")) return true;
-  if (ip.startsWith("::ffff:")) return isPrivateAddress(ip.slice(7));
-  const parts = ip.split(".").map((part) => Number(part));
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part))) return false;
-  const [a, b] = parts;
-  if (a === 10 || a === 127 || a === 0) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 169 && b === 254) return true;
-  return false;
+async function boundedLookup(host, lookupImpl) {
+  let timer;
+  try {
+    return await Promise.race([
+      lookupImpl(host, { all: true }),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new FetchError('DNS lookup timed out.', 502)), 5000); timer.unref?.(); }),
+    ]);
+  } finally { clearTimeout(timer); }
+}
+
+const blocked = new BlockList();
+for (const [address, prefix] of [["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8], ["169.254.0.0", 16], ["172.16.0.0", 12], ["192.0.0.0", 24], ["192.0.2.0", 24], ["192.168.0.0", 16], ["198.18.0.0", 15], ["198.51.100.0", 24], ["203.0.113.0", 24], ["224.0.0.0", 4], ["240.0.0.0", 4]]) {
+  blocked.addSubnet(address, prefix, "ipv4");
+}
+for (const [address, prefix] of [["::", 96], ["64:ff9b::", 96], ["64:ff9b:1::", 48], ["100::", 64], ["2001::", 23], ["2001:db8::", 32], ["2002::", 16], ["fc00::", 7], ["fe80::", 10], ["ff00::", 8]]) {
+  blocked.addSubnet(address, prefix, "ipv6");
+}
+
+export function isPrivateAddress(address) {
+  const family = isIP(address);
+  if (!family) return true;
+  return blocked.check(address, family === 6 ? "ipv6" : "ipv4");
+}
+
+// Validate the addresses used by the socket, rather than checking DNS then
+// letting fetch resolve an unchecked address on a second lookup.
+export function publicLookup(lookupImpl = lookup) {
+  return (hostname, options, callback) => {
+    lookupImpl(hostname, { all: true }).then((addresses) => {
+      if (!addresses.length || addresses.some(({ address }) => isPrivateAddress(address))) {
+        callback(new FetchError("That host is not a public listing."));
+        return;
+      }
+      const records = addresses.map(({ address }) => ({ address, family: isIP(address) }));
+      if (options.all) callback(null, records);
+      else callback(null, records[0].address, records[0].family);
+    }, () => callback(new FetchError("That host did not resolve.", 502)));
+  };
+}
+
+function fetchPublic(rawUrl, init, lookupImpl) {
+  const url = new URL(rawUrl);
+  return new Promise((resolve, reject) => {
+    const request = (url.protocol === "https:" ? httpsRequest : httpRequest)(url, {
+      headers: init.headers,
+      signal: init.signal,
+      lookup: publicLookup(lookupImpl),
+      agent: false,
+    }, (response) => {
+      const headers = new Headers();
+      for (const [key, value] of Object.entries(response.headers)) {
+        if (value != null) headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+      }
+      const status = response.statusCode || 502;
+      const empty = [204, 205, 304].includes(status);
+      if (empty) response.resume();
+      resolve(new Response(empty ? null : Readable.toWeb(response), { status, headers }));
+    });
+    request.on("error", reject);
+    request.end();
+  });
 }
 
 async function readLimited(response) {

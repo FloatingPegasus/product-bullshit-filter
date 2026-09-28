@@ -1,0 +1,58 @@
+name: product-research
+services:
+  app:
+    image: ${PRODUCT_IMAGE:-product-research:20260928-4}
+    env_file: /opt/product-research/shared/.env
+    environment:
+      NODE_OPTIONS: --max-old-space-size=384
+      SEARXNG_URL: http://product-search:8080
+    restart: unless-stopped
+    read_only: true
+    init: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 768m
+    cpus: 0.75
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      ingress:
+        aliases: [product-research-api]
+      search:
+  search:
+    image: searxng/searxng@sha256:5286edb35782454ab8a102c5eff6b54bff745853191b46aeead95f225aa6dfb6
+    user: "977:977"
+    restart: unless-stopped
+    read_only: true
+    environment:
+      FORCE_OWNERSHIP: "false"
+      GRANIAN_WORKERS: "1"
+    volumes:
+      - /opt/product-research/shared/searxng:/etc/searxng:ro
+    tmpfs:
+      - /tmp:size=32m,uid=977,gid=977
+      - /var/cache/searxng:size=32m,uid=977,gid=977
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      search:
+        aliases: [product-search]
+networks:
+  search:
+  ingress:
+    external: true
+    name: cadence-ingress
